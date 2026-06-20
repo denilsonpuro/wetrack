@@ -1,0 +1,87 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // -------------------------------------------------------------------------
+    // Helper Functions
+    // -------------------------------------------------------------------------
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // -------------------------------------------------------------------------
+    // Validation Blueprints
+    // -------------------------------------------------------------------------
+    function isValidVehicle(data) {
+      return data.keys().hasAll(['id', 'name', 'status']) &&
+             data.id is string &&
+             data.name is string &&
+             data.name.size() <= 100 &&
+             data.status in ['active', 'maintenance', 'idle', 'offline'] &&
+             (!('location' in data) || (data.location.lat is number && data.location.lng is number)) &&
+             (!('fuelPercent' in data) || (data.fuelPercent is number)) &&
+             (!('speed' in data) || (data.speed is number));
+    }
+
+    function isValidDriver(data) {
+      return data.keys().hasAll(['id', 'name']) &&
+             data.id is string &&
+             data.name is string &&
+             data.name.size() <= 100 &&
+             (!('safetyScore' in data) || (data.safetyScore is number));
+    }
+
+    function isValidMaintenanceAlert(data) {
+      return data.keys().hasAll(['id', 'vehicleId', 'type', 'createdAt']) &&
+             data.id is string &&
+             data.vehicleId is string &&
+             data.type in ['oil_change', 'engine_check', 'tire_rotation', 'brake_inspection'] &&
+             data.createdAt is timestamp;
+    }
+
+    // -------------------------------------------------------------------------
+    // Collection Rules
+    // -------------------------------------------------------------------------
+    
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    match /test/connection {
+      allow read: if true;
+    }
+
+    match /vehicles/{vehicleId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(vehicleId) && isValidVehicle(incoming());
+      allow update: if isSignedIn() && isValidVehicle(incoming());
+      allow delete: if isSignedIn(); // In a real app, maybe only admins
+    }
+
+    match /drivers/{driverId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(driverId) && isValidDriver(incoming());
+      allow update: if isSignedIn() && isValidDriver(incoming());
+      allow delete: if isSignedIn();
+    }
+
+    match /maintenance_alerts/{alertId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(alertId) && isValidMaintenanceAlert(incoming());
+      allow update: if isSignedIn() && isValidMaintenanceAlert(incoming());
+      allow delete: if isSignedIn();
+    }
+  }
+}

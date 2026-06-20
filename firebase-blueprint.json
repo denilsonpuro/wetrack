@@ -1,0 +1,72 @@
+{
+  "entities": {
+    "Vehicle": {
+      "title": "Vehicle",
+      "description": "Represents a vehicle in the fleet",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "maintenance", "idle", "offline"] },
+        "location": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          }
+        },
+        "fuelPercent": { "type": "number" },
+        "engineHealth": { "type": "string", "enum": ["good", "warning", "critical"] },
+        "speed": { "type": "number" },
+        "lastMaintenance": { "type": "string", "format": "date-time" },
+        "nextMaintenance": { "type": "string", "format": "date-time" },
+        "vin": { "type": "string" }
+      },
+      "required": ["id", "name", "status"]
+    },
+    "Driver": {
+      "title": "Driver",
+      "description": "Information about vehicle drivers",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "licenseNumber": { "type": "string" },
+        "safetyScore": { "type": "number" },
+        "speedingEvents": { "type": "integer" },
+        "brakingEvents": { "type": "integer" },
+        "status": { "type": "string", "enum": ["on-duty", "off-duty", "on-break"] }
+      },
+      "required": ["id", "name"]
+    },
+    "MaintenanceAlert": {
+      "title": "Maintenance Alert",
+      "description": "Alerts for vehicle maintenance",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "vehicleId": { "type": "string" },
+        "type": { "type": "string", "enum": ["oil_change", "engine_check", "tire_rotation", "brake_inspection"] },
+        "severity": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+        "status": { "type": "string", "enum": ["pending", "in_progress", "resolved"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "description": { "type": "string" }
+      },
+      "required": ["id", "vehicleId", "type", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/vehicles/{vehicleId}": {
+      "schema": "Vehicle",
+      "description": "Fleet vehicles"
+    },
+    "/drivers/{driverId}": {
+      "schema": "Driver",
+      "description": "Fleet drivers"
+    },
+    "/maintenance_alerts/{alertId}": {
+      "schema": "MaintenanceAlert",
+      "description": "Maintenance alerts"
+    }
+  }
+}

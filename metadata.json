@@ -1,0 +1,6 @@
+{
+  "name": "WeTrack",
+  "description": "Real-time GPS fleet tracking and logistics management platform (PWA-enabled). Mobile-ready with standalone app installation support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
